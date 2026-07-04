@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Advisor Portal - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <style>
+    @keyframes slideIn { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+    .card { background:white; border-radius:1rem; padding:1rem; margin-bottom:1rem; box-shadow:0 4px 8px rgba(0,0,0,0.08); animation:slideIn .45s ease-out; }
+    .dark .card { background:#1f2937; color:#f9fafb; }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans transition-colors duration-500">
+
+<header class="bg-white dark:bg-gray-800 shadow sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto flex justify-between items-center p-4">
+    <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">🎓 Advisor Portal</h1>
+    <nav class="hidden md:flex gap-4">
+      <button onclick="showSection('advisorInfo')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">My Info</button>
+     <!-- <button onclick="showSection('leaveRequests')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">Leave Requests</button>-->
+      <button onclick="showSection('studentList')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">Student List</button>
+      <button onclick="showSection('attendance')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">Attendance</button>
+      <button onclick="showSection('summary')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">Today's Summary</button>
+    </nav>
+    <div class="flex items-center gap-3">
+      <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-gray-200 dark:bg-gray-600">🌙</button>
+      <button onclick="toggleSidebar()" class="md:hidden p-2 rounded bg-gray-200 dark:bg-gray-600">☰</button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile Sidebar -->
+<div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow transform -translate-x-full transition-transform z-50">
+  <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+    <h2 class="text-lg font-bold text-blue-600 dark:text-blue-400">Menu</h2>
+    <button onclick="toggleSidebar()" class="text-gray-700 dark:text-gray-300">✖</button>
+  </div>
+  <nav class="flex flex-col gap-2 p-4">
+    <button onclick="navigate('advisorInfo')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">My Info</button>
+    <button onclick="navigate('leaveRequests')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">Leave Requests</button>
+    <button onclick="navigate('studentList')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">Student List</button>
+    <button onclick="navigate('attendance')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">Attendance</button>
+    <button onclick="navigate('summary')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">Today's Summary</button>
+  </nav>
+</div>
+<div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40" onclick="toggleSidebar()"></div>
+
+<main class="max-w-6xl mx-auto p-4">
+
+  <!-- Advisor Info -->
+  <section id="advisorInfo" class="card hidden">
+    <h2 class="text-lg font-semibold mb-2">👨‍🏫 Advisor Information</h2>
+    <p><b>Name:</b> <span id="advisorName" class="text-blue-600"></span></p>
+    <p><b>Department:</b> <span id="advisorDept" class="text-green-600"></span></p>
+    <p><b>Class/Year:</b> <span id="advisorClass" class="text-purple-600"></span></p>
+    <p><b>Subjects:</b></p>
+    <ul id="subjectList" class="list-disc ml-6 text-purple-600"></ul>
+  </section>
+
+  <!-- Leave Requests -->
+  <section id="leaveRequests" class="card hidden">
+    <h2 class="text-lg font-semibold mb-4">📌 Leave Requests</h2>
+    <div class="overflow-x-auto"> 
+      <table class="min-w-full border border-gray-200 dark:border-gray-700 rounded-lg">
+        <thead class="bg-gray-100 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-2 text-left">Name</th>
+            <th class="px-4 py-2 text-left">Reason</th>
+            <th class="px-4 py-2 text-left">Date</th>
+            <th class="px-4 py-2 text-center">Advisor</th>
+            <th class="px-4 py-2 text-center">HOD</th>
+            <th class="px-4 py-2 text-center">Final</th>
+            <th class="px-4 py-2 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="leaveTable" class="bg-white dark:bg-gray-800"></tbody>
+      </table>
+    </div>+
+  </section>
+
+  <!-- Student List -->
+  <section id="studentList" class="card hidden">
+    <h2 class="text-lg font-semibold mb-2">🎓 Student List</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200 dark:border-gray-700 rounded-lg">
+        <thead class="bg-gray-100 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">S.No</th>
+            <th class="px-4 py-2 text-left">Name</th>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">Reg No</th>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">Attendance %</th>
+          </tr>
+        </thead>
+        <tbody id="studentTable" class="bg-white dark:bg-gray-800"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Attendance -->
+  <section id="attendance" class="card hidden">
+    <h2 class="text-lg font-semibold mb-2">📅 Attendance</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200 dark:border-gray-700 rounded-lg">
+        <thead class="bg-gray-100 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">S.No</th>
+            <th class="px-4 py-2 text-left">Name</th>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">Reg No</th>
+            <th class="px-4 py-2 text-center">Attendance</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceTable" class="bg-white dark:bg-gray-800"></tbody>
+      </table>
+    </div>
+    <div class="mt-4">
+      <button onclick="submitAttendance()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Attendance</button>
+    </div>
+  </section>
+
+  <!-- Today's Summary -->
+  <section id="summary" class="card hidden">
+    <h2 class="text-lg font-semibold mb-4">📊 Today's Attendance Summary</h2>
+    <div class="flex gap-2 mb-3 justify-end">
+  <!-- Copy Button -->
+  <button id="copySummaryBtn" onclick="copyTodaySummary()" 
+    class="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition"
+    title="Copy Summary">
+    <!-- Clipboard Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+        d="M8 16h8M8 12h8m-9 8h10a2 2 0 002-2V6a2 2 0 00-2-2h-3.5l-1-1h-3l-1 1H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  </button>
+
+  <!-- Share Button -->
+  <button id="shareSummaryBtn" onclick="shareTodaySummary()" 
+    class="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition"
+    title="Share Summary">
+    <!-- Share Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 12v-2a4 4 0 014-4h3V4l5 4-5 4V8H8a2 2 0 00-2 2v2m0 4h12" />
+    </svg>
+  </button>
+</div>
+
+    <div id="todaySummary" class="text-lg"></div>
+    <pre id="absenteesBlock" class="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-x-auto whitespace-pre-wrap"></pre>
+    <pre id="odBlock" class="mt-3 p-3 bg-blue-50 dark:bg-gray-800 rounded-lg overflow-x-auto whitespace-pre-wrap"></pre>
+  </section>
+
+</main>
+
+<script>
+/* ------------------- UI helpers ------------------- */
+function showSection(id){
+  document.querySelectorAll("main section").forEach(s => s.classList.add("hidden"));
+  const el = document.getElementById(id);
+  if (el) el.classList.remove("hidden");
+  if (id === 'attendance') loadStudents();
+  if (id === 'leaveRequests') loadLeaveRequests();
+  if (id === 'summary') loadTodaySummary();
+}
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("-translate-x-full");
+  document.getElementById("overlay").classList.toggle("hidden");
+}
+function navigate(section){ showSection(section); toggleSidebar(); }
+function toggleDarkMode(){ document.body.classList.toggle("dark"); }
+
+/* --------------- Advisor Info --------------- */
+function loadAdvisorInfo(){
+  const name = localStorage.getItem("advisorName") || "Advisor";
+  const dept = localStorage.getItem("advisorDepartment") || "";
+  const className = localStorage.getItem("advisorClass") || "";
+  const year = localStorage.getItem("advisorYear") || "";
+  const subjects = JSON.parse(localStorage.getItem("advisorSubjects") || "[]");
+
+  document.getElementById("advisorName").textContent = name;
+  document.getElementById("advisorDept").textContent = dept;
+  document.getElementById("advisorClass").textContent = `${className} ${year ? "/ Year " + year : ""}`;
+
+  const list = document.getElementById("subjectList");
+  list.innerHTML = "";
+  subjects.forEach(s => {
+    const li = document.createElement("li"); li.textContent = s; list.appendChild(li);
+  });
+}
+
+/* --------------- Students & Attendance --------------- */
+async function loadStudents(){
+  try {
+    const advisorUserid = localStorage.getItem("advisorUserid");
+    if (!advisorUserid) { console.warn("advisorUserid missing in localStorage"); return; }
+
+    const res = await fetch(`http://localhost:5000/api/advisor/${advisorUserid}/students`);
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Failed fetching students:", res.status, text);
+      throw new Error("Failed to fetch students");
+    }
+    const json = await res.json();
+    const students = json.students || [];
+
+    const tbody = document.getElementById("studentTable");
+    tbody.innerHTML = "";
+    students.forEach((s,i) => {
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr class="border-t border-gray-200 dark:border-gray-700">
+          <td class="px-4 py-2 hidden sm:table-cell">${i+1}</td>
+          <td class="px-4 py-2">${s.name}</td>
+          <td class="px-4 py-2 hidden sm:table-cell">${s.regno || ""}</td>
+          <td class="px-4 py-2 hidden sm:table-cell">${s.attendancePercentage ?? 100}%</td>
+        </tr>`);
+    });
+
+    const attTable = document.getElementById("attendanceTable");
+    attTable.innerHTML = "";
+    students.forEach((s,i) => {
+      attTable.insertAdjacentHTML("beforeend", `
+        <tr class="border-t border-gray-200 dark:border-gray-700">
+          <td class="px-4 py-2 hidden sm:table-cell">${i+1}</td>
+          <td class="px-4 py-2">${s.name}</td>
+          <td class="px-4 py-2 hidden sm:table-cell">${s.regno || ""}</td>
+          <td class="px-4 py-2 text-center">
+            <select class="attendance-select px-3 py-1 border rounded-lg dark:bg-gray-700 dark:text-white" onchange="updateSelectColor(this)">
+              <option value="Present">Present</option>
+              <option value="Approved">Approved Leave</option>
+              <option value="Unapproved">Unapproved Leave</option>
+              <option value="OD">OD</option>
+            </select>
+          </td>
+        </tr>`);
+    });
+    document.querySelectorAll(".attendance-select").forEach(updateSelectColor);
+  } catch (err) {
+    console.error("❌ Error loading students:", err);
+    alert("Failed to load students (check server / network).");
+  }
+}
+
+function updateSelectColor(select){
+  select.classList.remove("text-green-600","text-red-600","text-blue-600","text-yellow-600");
+  if (select.value === "Present") select.classList.add("text-green-600");
+  else if (select.value === "Unapproved") select.classList.add("text-red-600");
+  else if (select.value === "OD") select.classList.add("text-blue-600");
+  else if (select.value === "Approved") select.classList.add("text-yellow-600");
+}
+
+async function submitAttendance(){
+  try {
+    const rows = document.querySelectorAll("#attendanceTable tr");
+    const attendance = [];
+    rows.forEach(r => {
+      const regnoCell = r.cells[2];
+      if (!regnoCell) return;
+      const regno = regnoCell.innerText.trim();
+      const sel = r.querySelector("select");
+      const status = sel ? sel.value : "Present";
+      attendance.push({ regno, status });
+    });
+
+    const advisorUserid = localStorage.getItem("advisorUserid");
+    const res = await fetch("http://localhost:5000/api/attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ advisorUserid, attendance })
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Attendance API error:", res.status, text);
+      const msg = text ? text : "Failed to save attendance";
+      alert("❌ " + msg);
+      return;
+    }
+    const json = await res.json();
+    if (json.success) {
+      alert("✅ Attendance saved successfully!");
+      loadTodaySummary();
+    } else {
+      alert("❌ " + (json.message || "Failed to save attendance"));
+    }
+  } catch (err) {
+    console.error("❌ Error submitting attendance:", err);
+    alert("Something went wrong while saving attendance.");
+  }
+}
+
+/* --------------- Leave Requests --------------- */
+function badgeClass(status) {
+  if (!status) return "bg-yellow-200 text-yellow-700";
+  const s = String(status).toLowerCase();
+  if (s === "approved") return "bg-green-200 text-green-700";
+  if (s === "rejected") return "bg-red-200 text-red-700";
+  return "bg-yellow-200 text-yellow-700";
+}
+
+async function loadLeaveRequests(){
+  try {
+    const res = await fetch("http://localhost:5000/api/leave/all");
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Leave list fetch failed:", res.status, text);
+      throw new Error("Failed to fetch leave requests");
+    }
+    const json = await res.json();
+    const requests = json.requests || [];
+
+    const tbody = document.getElementById("leaveTable");
+    tbody.innerHTML = "";
+    if (requests.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">No leave requests found</td></tr>`;
+      return;
+    }
+
+    requests.forEach(req => {
+      const advisorBadge = badgeClass(req.advisorStatus);
+      const hodBadge = badgeClass(req.hodStatus);
+      const finalBadge = badgeClass(req.finalStatus);
+
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr class="border-t border-gray-200 dark:border-gray-700">
+          <td class="px-4 py-2">${req.name || ""}</td>
+          <td class="px-4 py-2">${req.reason || ""}</td>
+          <td class="px-4 py-2">${req.date ? new Date(req.date).toLocaleDateString() : ""}</td>
+          <td class="px-4 py-2 text-center"><span class="px-2 py-1 rounded-lg ${advisorBadge}">${req.advisorStatus || "Pending"}</span></td>
+          <td class="px-4 py-2 text-center"><span class="px-2 py-1 rounded-lg ${hodBadge}">${req.hodStatus || "Pending"}</span></td>
+          <td class="px-4 py-2 text-center font-bold"><span class="px-2 py-1 rounded-lg ${finalBadge}">${req.finalStatus || "Pending"}</span></td>
+          <td class="px-4 py-2 text-center flex justify-center gap-1">
+            <button onclick="updateLeave('${req._id}','approved')" class="px-2 py-1 bg-green-500 text-white rounded-lg">✔️</button>
+            <button onclick="updateLeave('${req._id}','rejected')" class="px-2 py-1 bg-red-500 text-white rounded-lg">❌</button>
+            <button onclick="deleteLeave('${req._id}')" class="px-2 py-1 bg-gray-500 text-white rounded-lg">🗑️</button>
+          </td>
+        </tr>`);
+    });
+  } catch (err) {
+    console.error("❌ Error fetching leave requests:", err);
+    alert("Failed to load leave requests (check API).");
+  }
+}
+
+async function updateLeave(id, status) {
+  try {
+    const res = await fetch(`http://localhost:5000/api/leave/${id}/advisor`, {
+      method: "PUT",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Update leave returned error:", res.status, text);
+      alert("Failed to update leave (check server).");
+      return;
+    }
+    const json = await res.json();
+    if (json.success) {
+      loadLeaveRequests();
+      loadTodaySummary();
+    } else {
+      alert("Failed to update leave: " + (json.message || ""));
+    }
+  } catch (err) {
+    console.error("❌ Error updating leave:", err);
+    alert("Something went wrong while updating leave.");
+  }
+}
+
+async function deleteLeave(id) {
+  if (!confirm("Delete this leave request?")) return;
+  try {
+    const res = await fetch(`http://localhost:5000/api/leave/${id}/delete`, { method: "DELETE" });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Delete returned error:", res.status, text);
+      alert("Failed to delete leave request.");
+      return;
+    }
+    const json = await res.json();
+    if (json.success) {
+      loadLeaveRequests();
+      loadTodaySummary();
+    } else {
+      alert("Failed to delete: " + (json.message || ""));
+    }
+  } catch (err) {
+    console.error("❌ Error deleting leave:", err);
+    alert("Something went wrong deleting leave.");
+  }
+}
+
+/* --------------- Today's Summary --------------- */
+async function loadTodaySummary(){
+  try {
+    const advisorUserid = localStorage.getItem("advisorUserid");
+    if (!advisorUserid) {
+      console.warn("advisorUserid missing in localStorage; skipping summary");
+      document.getElementById("todaySummary").innerHTML = `<p class="text-yellow-600">Advisor user id missing — can't load summary</p>`;
+      return;
+    }
+
+    const res = await fetch(`http://localhost:5000/api/attendance/${advisorUserid}/today-summary`);
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Summary fetch failed:", res.status, text);
+      document.getElementById("todaySummary").innerHTML = `<p class="text-red-500">⚠️ Failed to fetch summary</p>`;
+      document.getElementById("absenteesBlock").textContent = "";
+      document.getElementById("odBlock").textContent = "";
+      return;
+    }
+
+    const data = await res.json();
+    const d = data.date ? new Date(data.date) : new Date();
+    const formattedDate = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+
+    document.getElementById("todaySummary").innerHTML = `
+      <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow text-gray-900 dark:text-gray-200">
+        <p><b>Date:</b> ${formattedDate}</p>
+        <p><b>Year:</b> ${data.year}</p>
+        <p><b>Department:</b> ${data.department || "IT"}</p>
+        <p><b>Total:</b> ${data.totalStudents || 60}</p>
+        <p><b>Presentees:</b> ${data.present ?? 0}</p>
+        <p><b>Absentees:</b> ${data.absentCount ?? 0}</p>
+        <p><b>OD:</b> ${data.od ?? 0}</p>
+        <p><b>Approved Leave:</b> ${data.approved ?? 0}</p>
+        <p><b>Unapproved Leave:</b> ${data.unapproved ?? 0}</p>
+      </div>`;
+
+    document.getElementById("absenteesBlock").textContent = (data.absentStudents?.length > 0)
+  ? `✅ Absentees Name:\n${data.absentStudents.map((s,i)=> {
+      const who = (s.name && s.name.trim()) ? s.name : (s.regno || s.rollno || "Unknown");
+      const note = s.reason || s.status || "";
+      return `${i+1}. ${who}${note ? " - " + note : ""}`;
+    }).join("\n")}`
+  : "🎉 No absentees today!";
+
+document.getElementById("odBlock").textContent = (data.odStudents?.length > 0)
+  ? `📌 OD Students:\n${data.odStudents.map((s,i)=> {
+      const who = (s.name && s.name.trim()) ? s.name : (s.regno || s.rollno || "Unknown");
+      const note = s.reason || s.status || "";
+      return `${i+1}. ${who}${note ? " - " + note : ""}`;
+    }).join("\n")}`
+  : "📌 No OD students today!";
+
+  } catch (err) {
+    console.error("❌ Error loading today's summary:", err);
+    document.getElementById("todaySummary").innerHTML = `<p class="text-red-500">⚠️ Failed to fetch summary</p>`;
+    document.getElementById("absenteesBlock").textContent = "";
+    document.getElementById("odBlock").textContent = "";
+  }
+}
+
+// ✅ Copy with feedback
+function copyTodaySummary() {
+  const summaryText = document.getElementById("todaySummary").innerText;
+  const absenteesText = document.getElementById("absenteesBlock").innerText;
+  const odText = document.getElementById("odBlock").innerText;
+
+  const text = summaryText + "\n\n" + absenteesText + "\n\n" + odText;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById("copySummaryBtn");
+    btn.classList.add("bg-green-500");
+    btn.innerHTML = "✅";
+    setTimeout(() => { 
+      btn.classList.remove("bg-green-500");
+      btn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M8 16h8M8 12h8m-9 8h10a2 2 0 002-2V6a2 2 0 00-2-2h-3.5l-1-1h-3l-1 1H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>`;
+    }, 1500);
+  });
+}
+
+// ✅ Share helpers
+async function shareTodaySummary() {
+  const text = document.getElementById("todaySummary").innerText + "\n\n" +
+               document.getElementById("absenteesBlock").innerText + "\n\n" +
+               document.getElementById("odBlock").innerText;
+  if (navigator.share) {
+    await navigator.share({ title: "Today's Attendance Summary", text });
+  } else {
+    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+  }
+}
+
+
+
+
+
+
+/* --------------- Initialize on load --------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  loadAdvisorInfo();
+  showSection("advisorInfo");
+  // pre-load requests & summary so UI feels snappy
+  loadLeaveRequests();
+  loadTodaySummary();
+});
+</script>
+
+</body>
+</html>

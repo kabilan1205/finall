@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HOD Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Extra custom media query for very small screens */
+    @media (max-width: 480px) {
+      #summaryCounts {
+        font-size: 14px;
+        text-align: center;
+      }
+      #leaveTable th, #leaveTable td {
+        font-size: 12px;
+        padding: 6px;
+      }
+      #searchInput, #departmentFilter {
+        width: 100%;
+      }
+      #pagination button {
+        padding: 4px 8px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 dark:text-white p-4 sm:p-6">
+
+  <section id="hodDashboard" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-4 sm:p-6">
+    <h2 class="text-lg sm:text-xl font-bold mb-4">📋 HOD Dashboard</h2>
+
+    <!-- Summary Counts -->
+    <div id="summaryCounts" class="mb-4 font-semibold text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+      📊 Summary: Present: 0 | Absent (Informed): 0 | Absent (Uninformed): 0
+    </div>
+
+    <!-- Filters -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4">
+      <input type="text" id="searchInput" placeholder="Search student..." class="p-2 w-full sm:w-auto border rounded-lg dark:bg-slate-900 dark:border-slate-700">
+      <select id="departmentFilter" class="p-2 w-full sm:w-auto border rounded-lg dark:bg-slate-900 dark:border-slate-700">
+        <option value="">All Departments</option>
+        <option value="CSE">CSE</option>
+        <option value="ECE">ECE</option>
+        <option value="MECH">MECH</option>
+      </select>
+      <div class="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
+        <button onclick="exportExcel()" class="bg-green-600 text-white px-3 py-2 rounded w-1/2 sm:w-auto">Excel</button>
+        <button onclick="exportPDF()" class="bg-red-600 text-white px-3 py-2 rounded w-1/2 sm:w-auto">PDF</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table id="leaveTable" class="min-w-full text-xs sm:text-sm text-left border dark:border-slate-700">
+        <thead class="bg-gray-200 dark:bg-slate-700">
+          <tr>
+            <th class="p-2 sm:p-3 border dark:border-slate-700">Student</th>
+            <th class="p-2 sm:p-3 border dark:border-slate-700">Department</th>
+            <th class="p-2 sm:p-3 border dark:border-slate-700">Reason</th>
+            <th class="p-2 sm:p-3 border dark:border-slate-700">Date</th>
+            <th class="p-2 sm:p-3 border dark:border-slate-700">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex flex-wrap justify-center gap-2" id="pagination"></div>
+  </section>
+
+  <script>
+    const allData = [
+      { student: "John", dept: "CSE", reason: "Medical", date: "2025-09-01", status: "Absent - Informed" },
+      { student: "Jane", dept: "ECE", reason: "None", date: "2025-09-02", status: "Absent - Uninformed" },
+      { student: "Alex", dept: "MECH", reason: "", date: "2025-09-02", status: "Present" },
+      { student: "Nisha", dept: "CSE", reason: "Travel", date: "2025-09-03", status: "Present" },
+      { student: "Rahul", dept: "ECE", reason: "Health", date: "2025-09-04", status: "Absent - Informed" },
+      { student: "Meena", dept: "CSE", reason: "", date: "2025-09-05", status: "Present" },
+      { student: "Arun", dept: "MECH", reason: "Unknown", date: "2025-09-05", status: "Absent - Uninformed" },
+    ];
+
+    let currentPage = 1;
+    const rowsPerPage = 3;
+
+    const tableBody = document.getElementById('tableBody');
+    const pagination = document.getElementById('pagination');
+    const searchInput = document.getElementById('searchInput');
+    const deptFilter = document.getElementById('departmentFilter');
+
+    function renderTable(data) {
+      tableBody.innerHTML = "";
+      const start = (currentPage - 1) * rowsPerPage;
+      const paginated = data.slice(start, start + rowsPerPage);
+      for (const row of paginated) {
+        const tr = document.createElement("tr");
+        tr.className = "border-t dark:border-slate-700";
+        tr.innerHTML = `
+          <td class="p-2 sm:p-3">${row.student}</td>
+          <td class="p-2 sm:p-3">${row.dept}</td>
+          <td class="p-2 sm:p-3">${row.reason || '-'}</td>
+          <td class="p-2 sm:p-3">${row.date}</td>
+          <td class="p-2 sm:p-3 font-semibold text-${getStatusColor(row.status)}-500">${row.status}</td>
+        `;
+        tableBody.appendChild(tr);
+      }
+    }
+
+    function getStatusColor(status) {
+      if (status === "Present") return "green";
+      if (status === "Absent - Informed") return "yellow";
+      if (status === "Absent - Uninformed") return "red";
+      return "gray";
+    }
+
+    function renderPagination(dataLength) {
+      pagination.innerHTML = "";
+      const totalPages = Math.ceil(dataLength / rowsPerPage);
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = `px-3 py-1 rounded ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-slate-700'}`;
+        btn.onclick = () => {
+          currentPage = i;
+          filterAndRender();
+        };
+        pagination.appendChild(btn);
+      }
+    }
+
+    function updateSummary(filtered) {
+      const present = filtered.filter(i => i.status === "Present").length;
+      const informed = filtered.filter(i => i.status === "Absent - Informed").length;
+      const uninformed = filtered.filter(i => i.status === "Absent - Uninformed").length;
+
+      document.getElementById("summaryCounts").textContent =
+        `📊 Summary: Present: ${present} | Absent (Informed): ${informed} | Absent (Uninformed): ${uninformed}`;
+    }
+
+    function filterAndRender() {
+      const search = searchInput.value.toLowerCase();
+      const dept = deptFilter.value;
+
+      const filtered = allData.filter(item =>
+        (!dept || item.dept === dept) &&
+        item.student.toLowerCase().includes(search)
+      );
+
+      updateSummary(filtered);
+      renderTable(filtered);
+      renderPagination(filtered.length);
+    }
+
+    // Export to Excel
+    function exportExcel() {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(allData);
+      XLSX.utils.book_append_sheet(wb, ws, "LeaveRequests");
+      XLSX.writeFile(wb, "leave_requests.xlsx");
+    }
+
+    // Export to PDF
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(12);
+      doc.text("Leave Requests", 10, 10);
+
+      let y = 20;
+      allData.forEach((item, index) => {
+        doc.text(`${index + 1}. ${item.student} | ${item.dept} | ${item.reason} | ${item.date} | ${item.status}`, 10, y);
+        y += 10;
+      });
+
+      doc.save("leave_requests.pdf");
+    }
+
+    // Event Listeners
+    searchInput.addEventListener("input", () => {
+      currentPage = 1;
+      filterAndRender();
+    });
+
+    deptFilter.addEventListener("change", () => {
+      currentPage = 1;
+      filterAndRender();
+    });
+
+    // Init
+    filterAndRender();
+  </script>
+</body>
+</html>

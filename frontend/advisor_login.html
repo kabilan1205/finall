@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PREZENZO - Advisor Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(-45deg, #3b82f6, #60a5fa, #93c5fd, #bfdbfe);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .login-card::before {
+      content:'';
+      position:absolute;
+      top:-15px; left:-15px; right:-15px; bottom:-15px;
+      background: linear-gradient(135deg,#3b82f6,#60a5fa);
+      z-index:-1;
+      filter:blur(50px);
+      opacity:0.6;
+      border-radius:2rem;
+    }
+    input:focus{transition:all 0.3s ease;}
+    .login-card{animation:fadeInUp 0.8s ease forwards; opacity:0; transform:translateY(-20px);}
+    @keyframes fadeInUp{to{opacity:1; transform:translateY(0);}}
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+  <div class="relative login-card bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+
+    <div class="text-center mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600 animate-pulse mx-auto" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2L20 7v10l-8 5-8-5V7l8-5z"/>
+      </svg>
+      <h1 class="text-2xl font-bold text-blue-700">PREZENZO</h1>
+      <p class="text-gray-500 text-sm">Advisor Portal - Manage Students</p>
+    </div>
+
+    <form id="advisorLoginForm" onsubmit="handleAdvisorLogin(event)" class="space-y-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Advisor ID</label>
+        <input type="text" id="advisorId" placeholder="Enter Advisor ID" required
+          class="mt-1 w-full px-4 py-3 border border-gray-300 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"/>
+      </div>
+
+      <div class="relative">
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" id="advisorPassword" placeholder="Enter Password" required
+          class="mt-1 w-full px-4 py-3 border border-gray-300 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-12"/>
+        <button type="button" id="toggleAdvisorPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">👁️</button>
+      </div>
+
+      <button type="submit"
+        class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:opacity-90 transition duration-300 text-lg">
+        SIGN IN
+      </button>
+
+      <div class="flex items-center justify-between text-sm text-gray-600 mt-4">
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="advisorRememberMe" class="rounded border-gray-300">
+          <span>Remember me</span>
+        </label>
+        <a href="#" class="text-blue-600 hover:underline">Forgot Password?</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    async function handleAdvisorLogin(e) {
+  e.preventDefault();
+
+  const userid = document.getElementById('advisorId').value.trim();
+  const password = document.getElementById('advisorPassword').value.trim();
+  const rememberMe = document.getElementById('advisorRememberMe').checked;
+
+  try {
+    const res = await fetch("http://localhost:5000/api/advisor/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userid, password })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+  // ✅ Save advisor details in localStorage
+  localStorage.setItem("advisorUserid", data.userid);
+  localStorage.setItem("advisorName", data.advisorName);
+  localStorage.setItem("advisorClass", data.class);
+  localStorage.setItem("advisorDepartment", data.department);
+  localStorage.setItem("advisorYear", data.year);
+  localStorage.setItem("advisorSubjects", JSON.stringify(data.subjects)); // ✅ New
+
+  if (rememberMe) {
+    localStorage.setItem("advisorRememberMe", true);
+  } else {
+    localStorage.removeItem("advisorRememberMe");
+  }
+
+  // ✅ Redirect to dashboard
+  window.location.href = "advisor_dashboard.html";
+} else {
+  alert(data.message || "Login failed!");
+}
+} catch (err) {
+  console.error("❌ Login Error:", err);
+    alert("Server error!");
+  }
+}
+
+// ✅ Password toggle
+const togglePwd = document.getElementById('toggleAdvisorPassword');
+const pwdInput = document.getElementById('advisorPassword');
+togglePwd.addEventListener('click', () => {
+  const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+  pwdInput.setAttribute('type', type);
+  togglePwd.textContent = type === 'password' ? '👁️' : '🙈';
+});
+
+  </script>
+</body>
+</html>

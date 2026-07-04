@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PREZENZO - HOD Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Animated gradient background */
+    body {
+      background: linear-gradient(-45deg, #16a34a, #22c55e, #4ade80, #86efac);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Floating glow for card */
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: -15px; left: -15px; right: -15px; bottom: -15px;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      z-index: -1;
+      filter: blur(50px);
+      opacity: 0.6;
+      border-radius: 2rem;
+    }
+
+    /* Smooth input focus */
+    input:focus {
+      transition: all 0.3s ease;
+    }
+
+    /* Card entrance animation */
+    .login-card {
+      animation: fadeInUp 0.8s ease forwards;
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+  <!-- Login Card -->
+  <div class="relative login-card bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+
+    <!-- Logo / Icon -->
+    <div class="text-center mb-6">
+      <div class="flex justify-center mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2L20 7v10l-8 5-8-5V7l8-5z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-green-700">PREZENZO</h1>
+      <p class="text-gray-500 text-sm">HOD Portal - Manage Department Excellence</p>
+    </div>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="hidden text-green-600 font-semibold text-center mb-3">
+      ✅ Login Successful! Redirecting...
+    </div>
+
+    <!-- Form -->
+    <form id="hodLoginForm" onsubmit="handleHodLogin(event)" class="space-y-5">
+      <!-- User ID -->
+      <div>
+        <label for="hodUserId" class="block text-sm font-medium text-gray-700">HOD ID</label>
+        <input type="text" id="hodUserId" placeholder="Enter your HOD ID" required
+          class="mt-1 w-full px-4 py-3 border border-gray-300 rounded-2xl shadow-sm focus:ring-2 focus:ring-green-500 focus:outline-none"/>
+      </div>
+
+      <!-- Password -->
+      <div class="relative">
+        <label for="hodPassword" class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" id="hodPassword" placeholder="Enter your Password" required
+          class="mt-1 w-full px-4 py-3 border border-gray-300 rounded-2xl shadow-sm focus:ring-2 focus:ring-green-500 focus:outline-none pr-12"/>
+        <!-- Show/Hide Button -->
+        <button type="button" id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+          👁️
+        </button>
+      </div>
+
+      <!-- Button -->
+      <button type="submit"
+        class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:opacity-90 transition duration-300 text-lg">
+        SIGN IN
+      </button>
+
+      <!-- Options -->
+      <div class="flex items-center justify-between text-sm text-gray-600 mt-4">
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="hodRememberMe" class="rounded border-gray-300">
+          <span>Remember me</span>
+        </label>
+        <a href="#" class="text-green-600 hover:underline">Forgot Password?</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    async function handleHodLogin(event) {
+  event.preventDefault();
+  const userid = document.getElementById('hodUserId').value;
+  const password = document.getElementById('hodPassword').value;
+  const rememberMe = document.getElementById('hodRememberMe').checked;
+
+  try {
+    const response = await fetch("http://localhost:5000/api/hod/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userid, password }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      document.getElementById("successMessage").classList.remove("hidden");
+      document.getElementById("successMessage").textContent =
+        `✅ Welcome ${data.name}! Redirecting...`;
+
+      // ✅ Save name + userid
+      localStorage.setItem("hodUserId", data.userid);
+      localStorage.setItem("hodName", data.name);
+
+      if (rememberMe) localStorage.setItem("hodRememberMe", true);
+
+      setTimeout(() => window.location.href = "hod_dashboard.html", 1500);
+    } else {
+      alert(data.message || "Login failed. Try again.");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Something went wrong. Please try again later.");
+  }
+}
+
+    // Show/Hide password toggle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('hodPassword');
+
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PRESENZO • Student Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  tailwind.config = { darkMode: 'class' };
+</script>
+<style>.hidden{display:none;}</style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 dark:text-slate-100 min-h-screen">
+
+<!-- Header -->
+<header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-indigo-700 dark:to-fuchsia-700">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+    <h1 class="text-base sm:text-lg md:text-xl font-bold">🎓 Student Portal</h1>
+    <nav class="hidden md:flex items-center gap-6">
+      <button data-section="leaveForm" class="hover:underline">Leave Requests</button>
+      <button data-section="viewRequests" class="hover:underline">View Requests</button>
+      <button data-section="attendance" class="hover:underline">Attendance</button>
+      <button data-section="profile" class="hover:underline">Profile</button>
+      <button id="themeBtn" class="ml-3 rounded-xl bg-white/90 text-black px-3 py-1 shadow hover:bg-white dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">🌙</button>
+    </nav>
+    <div class="md:hidden flex items-center gap-2">
+      <button id="themeBtnSm" class="rounded-xl bg-white/90 text-black px-3 py-1 shadow hover:bg-white dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">🌙</button>
+      <button id="menuBtn" class="rounded-xl bg-white/90 text-black px-3 py-1 shadow hover:bg-white dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">☰</button>
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar Overlay -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/40 hidden z-40"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-slate-800 shadow-lg transform -translate-x-full transition-transform z-50">
+  <div class="p-4 flex justify-between items-center border-b dark:border-slate-700">
+    <h2 class="font-bold text-lg">Menu</h2>
+    <button id="closeSidebarBtn" class="text-xl">✖</button>
+  </div>
+  <nav class="p-4 space-y-3">
+    <button data-section="leaveForm" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">Leave Requests</button>
+    <button data-section="viewRequests" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">View Requests</button>
+    <button data-section="attendance" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">Attendance</button>
+    <button data-section="profile" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">Profile</button>
+  </nav>
+</aside>
+
+<!-- Main -->
+<main class="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 md:py-10 space-y-6">
+
+  <!-- Leave Request Form -->
+  <section id="leaveForm" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 hidden">
+    <h2 class="text-xl font-bold mb-4">📌 Leave Request Form</h2>
+    <form id="leaveRequestForm" class="space-y-4">
+      <input type="text" id="leaveName" placeholder="Your Name" class="w-full p-2 border rounded-lg dark:border-slate-700 dark:bg-slate-900" required>
+      <input type="text" id="leaveReason" placeholder="Reason" class="w-full p-2 border rounded-lg dark:border-slate-700 dark:bg-slate-900" required>
+      <input type="date" id="leaveDate" class="w-full p-2 border rounded-lg dark:border-slate-700 dark:bg-slate-900" required>
+      <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow">Submit</button>
+    </form>
+  </section>
+
+  <!-- View Submitted Requests -->
+  <section id="viewRequests" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 hidden">
+    <h2 class="text-xl font-bold mb-4">📝 My Leave Requests</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200 dark:border-gray-700 rounded-lg">
+        <thead class="bg-gray-100 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-2 text-left">Date</th>
+            <th class="px-4 py-2 text-left">Reason</th>
+            <th class="px-4 py-2 text-center">Status</th>
+            <th class="px-4 py-2 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="myLeaveRequests" class="bg-white dark:bg-slate-800"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Attendance -->
+  <section id="attendance" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 hidden">
+    <h2 class="text-xl font-bold mb-4">📊 Today's Attendance</h2>
+    <div id="todayAttendanceBox" class="p-4 rounded-lg text-lg font-semibold text-center">
+      Loading...
+    </div>
+    <p>Your Attendance: <span id="studentAttendance" class="font-bold text-blue-600 dark:text-blue-400">100%</span></p>
+  </section>
+
+  <!-- Profile Section -->
+  <section id="profile" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 hidden">
+    <h2 class="text-xl font-bold mb-4">👤 Profile</h2>
+    <div class="flex flex-col sm:flex-row gap-4 items-center">
+      <img id="studentPhoto" src="default-avatar.png" class="w-32 h-32 rounded-full shadow border dark:border-slate-700 object-cover" alt="Profile Photo">
+      <div>
+        <p><strong>Name:</strong> <span id="studentName">--</span></p>
+        <p><strong>Roll No:</strong> <span id="studentRoll">--</span></p>
+        <p><strong>Reg No:</strong> <span id="studentReg">--</span></p>
+        <p><strong>Class:</strong> <span id="studentClass">--</span></p>
+        <p><strong>Department:</strong> <span id="studentDept">--</span></p>
+      </div>
+    </div>
+    <form id="uploadForm" enctype="multipart/form-data" class="mt-4 flex flex-col gap-3">
+      <input type="file" id="photo" name="photo" accept="image/*" class="p-2 border rounded-lg dark:border-slate-700 dark:bg-slate-900" required>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg shadow">Upload</button>
+    </form>
+  </section>
+
+  <!-- Default Home -->
+  <section id="home" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6">
+    <h2 class="text-xl font-bold mb-2">
+      Welcome <span id="welcomeName" class="text-blue-600 dark:text-blue-400"></span>👋
+    </h2>
+    <p class="text-gray-600 dark:text-slate-300">Use the top navigation (or mobile menu) to access features.</p>
+  </section>
+</main>
+
+<!-- Scripts -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const userid = localStorage.getItem("studentUserid");
+  if (!userid) { 
+    Swal.fire("Session Expired","Please login again!","error").then(()=>window.location.href="login.html"); 
+    return; 
+  }
+
+  // Theme toggle
+  if(localStorage.getItem("theme")==="dark") document.documentElement.classList.add("dark");
+  const themeBtns=document.querySelectorAll("#themeBtn,#themeBtnSm");
+  const toggleTheme=()=>{const d=document.documentElement.classList.toggle("dark");localStorage.setItem("theme",d?"dark":"light");themeBtns.forEach(b=>b.textContent=d?"☀":"🌙");};
+  themeBtns.forEach(b=>b.addEventListener("click",toggleTheme));
+
+  // Sidebar toggle
+  const sidebar=document.getElementById("sidebar"),overlay=document.getElementById("sidebarOverlay");
+  const openSidebar=()=>{sidebar.classList.remove("-translate-x-full");overlay.classList.remove("hidden");};
+  const closeSidebar=()=>{sidebar.classList.add("-translate-x-full");overlay.classList.add("hidden");};
+  document.getElementById("menuBtn").addEventListener("click",openSidebar);
+  document.getElementById("closeSidebarBtn").addEventListener("click",closeSidebar);
+  overlay.addEventListener("click",closeSidebar);
+
+  // Section navigation
+  const showSection=id=>{document.querySelectorAll("main>section").forEach(s=>s.classList.add("hidden"));document.getElementById(id)?.classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});};
+  document.querySelectorAll("nav button[data-section], #sidebar nav button[data-section]").forEach(btn=>btn.addEventListener("click",()=>{showSection(btn.dataset.section);closeSidebar();}));
+
+  // Load profile
+  async function loadStudentProfile(){
+    try{
+      const res=await fetch(`http://localhost:5000/api/students/profile/${userid}`);
+      const data=await res.json();
+      if(data.success){
+        const s=data.student;
+        document.getElementById("studentName").textContent=s.name||"--";
+        document.getElementById("welcomeName").textContent=s.name||"Student";
+        document.getElementById("studentRoll").textContent=s.rollno||"--";
+        document.getElementById("studentReg").textContent=s.regno||"--";
+        document.getElementById("studentDept").textContent=s.department||"--";
+        document.getElementById("studentClass").textContent=s.class||"--";
+        document.getElementById("leaveName").value=s.name||"";
+        document.getElementById("studentPhoto").src=s.photo?`http://localhost:5000${s.photo}`:"default-avatar.png";
+      }else Swal.fire("Error","Profile not found","error");
+    }catch(e){console.error(e);Swal.fire("Error","Failed to load profile","error");}
+  }
+
+  // ✅ Load today's attendance with colors
+  async function loadTodayAttendance() {
+    const userid = localStorage.getItem("studentUserid");
+    if (!userid) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/attendance/today/${userid}`);
+      const data = await res.json();
+
+      const box = document.getElementById("todayAttendanceBox");
+
+      if (!data.success) {
+        box.textContent = "⚠️ Not Marked Yet";
+        box.className = "p-4 rounded-lg font-semibold bg-gray-200 text-gray-700";
+        return;
+      }
+
+      let colorClass = "";
+      switch ((data.status || "").toLowerCase()) {
+        case "present":
+          colorClass = "bg-green-200 text-green-800"; break;
+        case "absent":
+          colorClass = "bg-red-200 text-red-800"; break;
+        case "od":
+          colorClass = "bg-blue-200 text-blue-800"; break;
+        case "approved":
+          colorClass = "bg-green-300 text-green-900"; break;
+        case "unapproved":
+          colorClass = "bg-orange-300 text-orange-900"; break;
+        case "pending":
+          colorClass = "bg-yellow-200 text-yellow-800"; break;
+        default:
+          colorClass = "bg-gray-200 text-gray-700";
+      }
+
+      box.textContent = data.status ? data.status.toUpperCase() : "UNKNOWN";
+      box.className = `p-4 rounded-lg text-lg font-semibold text-center ${colorClass}`;
+    } catch (err) {
+      console.error("Attendance Fetch Error:", err);
+      document.getElementById("todayAttendanceBox").textContent = "❌ Server Error";
+    }
+  }
+
+  // Upload photo
+  document.getElementById("uploadForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const formData=new FormData();formData.append("photo",document.getElementById("photo").files[0]);
+    try{
+      const res=await fetch(`http://localhost:5000/api/students/upload-photo/${userid}`,{method:"POST",body:formData});
+      const data=await res.json();
+      if(data.success){Swal.fire("Success!","Photo updated","success");document.getElementById("studentPhoto").src=`http://localhost:5000${data.photo}`;}
+      else Swal.fire("Error",data.message,"error");
+    }catch(err){console.error(err);Swal.fire("Error","Failed to upload photo","error");}
+  });
+
+  // ✅ Leave submit (default status Pending)
+  document.getElementById("leaveRequestForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const name=document.getElementById("leaveName").value;
+    const reason=document.getElementById("leaveReason").value;
+    const date=document.getElementById("leaveDate").value;
+
+    const today=new Date();today.setHours(0,0,0,0);
+    const leaveDate=new Date(date);leaveDate.setHours(0,0,0,0);
+    if(leaveDate<today){Swal.fire("⚠️ Invalid Date","You can only request leave for today or future dates","warning");return;}
+
+    const studentDept=document.getElementById("studentDept").textContent;
+    const studentClass=document.getElementById("studentClass").textContent;
+    const studentRegNo=document.getElementById("studentReg").textContent;
+
+    try{
+      const res=await fetch(`http://localhost:5000/api/leave/submit`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({userid,name,reason,date,department:studentDept,class:studentClass,studentRegNo,status:"Pending"})
+      });
+      const data=await res.json();
+      if(data.success){Swal.fire("Success!","Leave submitted","success");document.getElementById("leaveRequestForm").reset();loadMyLeaveRequests();showSection("viewRequests");}
+      else Swal.fire("Error",data.message||"Failed","error");
+    }catch(err){console.error(err);Swal.fire("Error","Server error","error");}
+  });
+
+  // Delete leave
+  window.deleteStudentLeave=async(id,status)=>{
+    if((status||"").toLowerCase()!=="pending"){Swal.fire("⛔ Not Allowed","Only pending requests can be deleted!","warning");return;}
+    const confirm=await Swal.fire({title:"Are you sure?",text:"This leave request will be permanently deleted!",icon:"warning",showCancelButton:true,confirmButtonColor:"#d33",cancelButtonColor:"#3085d6",confirmButtonText:"Yes, delete it!"});
+    if(!confirm.isConfirmed)return;
+    try{
+      const res=await fetch(`http://localhost:5000/api/leave/${id}/delete`,{method:"DELETE"});
+      const data=await res.json();
+      if(data.success){Swal.fire("Deleted!","Your leave request has been deleted.","success");document.querySelector(`#myLeaveRequests tr button[onclick*="${id}"]`).closest("tr").remove();}
+      else Swal.fire("Error",data.message||"Failed to delete","error");
+    }catch(err){console.error(err);Swal.fire("Error","Server error","error");}
+  };
+// ✅ Load leave requests with colored status
+async function loadMyLeaveRequests(){
+  try{
+    const res = await fetch(`http://localhost:5000/api/leave/mine?userid=${userid}`);
+    const data = await res.json();
+    const tbody = document.getElementById("myLeaveRequests");
+    tbody.innerHTML = "";
+
+    const leaveList = data.requests || [];
+    if(leaveList.length === 0){
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3">No leave requests found</td></tr>`;
+      return;
+    }
+
+    leaveList.forEach(r=>{
+      // 🔹 Use finalStatus instead of old status
+      const status = (r.finalStatus || "Pending").toLowerCase();
+
+      let statusClass =
+        status === "approved" ? "bg-green-200 text-green-700" :
+        status === "rejected" ? "bg-red-200 text-red-700" :
+        "bg-yellow-200 text-yellow-700"; // default pending
+
+      tbody.innerHTML += `
+        <tr class="border-t border-gray-200 dark:border-gray-700">
+          <td class="px-3 py-2">${new Date(r.date).toLocaleDateString()}</td>
+          <td class="px-3 py-2">${r.reason}</td>
+          <td class="px-3 py-2 text-center">
+            <span class="inline-block px-3 py-1 rounded-lg font-semibold ${statusClass}">
+              ${r.finalStatus || "Pending"}
+            </span>
+          </td>
+          <td class="px-2 py-2 text-center">
+            <button onclick="deleteStudentLeave('${r._id}','${r.finalStatus||"Pending"}')" 
+              class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg">
+              Delete
+            </button>
+          </td>
+        </tr>`;
+    });
+  } catch(err){
+    console.error(err);
+    document.getElementById("myLeaveRequests").innerHTML =
+      `<tr><td colspan="4" class="text-center py-3 text-red-500">Failed to fetch requests</td></tr>`;
+  }
+}
+
+
+  // Init
+  loadStudentProfile();loadTodayAttendance();loadMyLeaveRequests();showSection("home");
+});
+</script>
+</body>
+</html>

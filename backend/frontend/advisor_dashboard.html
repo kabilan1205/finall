@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advisor Portal - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+  <style>
+    @keyframes slideIn { from { opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+    .card { background:white; border-radius:1rem; padding:1rem; margin-bottom:1rem; box-shadow:0 4px 8px rgba(0,0,0,0.1); animation:slideIn 0.5s ease-out; }
+    .dark .card { background:#1f2937; color:#f9fafb; }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans transition-colors duration-500">
+
+<!-- Navbar -->
+<header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto flex justify-between items-center p-4">
+    <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">🎓 Advisor Portal</h1>
+    <nav class="hidden md:flex gap-4">
+      <button onclick="showSection('advisorInfo')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white">My Info</button>
+      <button onclick="showSection('leaveRequests')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white">Leave Requests</button>
+      <button onclick="showSection('studentList')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white">Student List</button>
+      <button onclick="showSection('attendance')" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white">Attendance</button>
+    </nav>
+    <div class="flex items-center gap-4">
+      <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-gray-200 dark:bg-gray-600">🌙</button>
+      <button onclick="toggleSidebar()" class="md:hidden p-2 rounded bg-gray-200 dark:bg-gray-600">☰</button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile Sidebar -->
+<div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform -translate-x-full transition-transform duration-300 z-50">
+  <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+    <h2 class="text-lg font-bold text-blue-600 dark:text-blue-400">Menu</h2>
+    <button onclick="toggleSidebar()" class="text-gray-700 dark:text-gray-300">✖</button>
+  </div>
+  <nav class="flex flex-col gap-2 p-4">
+    <button onclick="navigate('advisorInfo')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">My Info</button>
+    <button onclick="navigate('leaveRequests')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">Leave Requests</button>
+    <button onclick="navigate('studentList')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">Student List</button>
+    <button onclick="navigate('attendance')" class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600">Attendance</button>
+  </nav>
+</div>
+<div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40" onclick="toggleSidebar()"></div>
+
+<!-- Main Content -->
+<main class="max-w-6xl mx-auto p-4">
+
+  <!-- Advisor Info -->
+  <section id="advisorInfo" class="card hidden">
+    <h2 class="text-lg font-semibold mb-2">👨‍🏫 Advisor Information</h2>
+    <p><b>Name:</b> <span id="advisorName" class="text-blue-600"></span></p>
+    <p><b>Department:</b> <span id="advisorDept" class="text-green-600"></span></p>
+    <p><b>Class/Year:</b> <span id="advisorClass" class="text-purple-600"></span></p>
+    <p><b>Subjects Handling:</b></p>
+    <ul id="subjectList" class="list-disc ml-6 text-purple-600"></ul>
+  </section>
+
+  <!-- Leave Requests -->
+  <section id="leaveRequests" class="card hidden">
+    <h2 class="text-lg font-semibold">📌 Leave Requests</h2>
+    <p>All leave requests will be displayed here.</p>
+  </section>
+
+  <!-- Student List -->
+  <section id="studentList" class="card hidden">
+    <h2 class="text-lg font-semibold">🎓 Student List</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200 dark:border-gray-700 rounded-lg">
+        <thead class="bg-gray-100 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">S.No</th>
+            <th class="px-4 py-2 text-left">Name</th>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">Reg No</th>
+          </tr>
+        </thead>
+        <tbody id="studentTable" class="bg-white dark:bg-gray-800"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Attendance -->
+  <section id="attendance" class="card hidden">
+    <h2 class="text-lg font-semibold mb-4">📅 Attendance</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200 dark:border-gray-700 rounded-lg">
+        <thead class="bg-gray-100 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">S.No</th>
+            <th class="px-4 py-2 text-left">Name</th>
+            <th class="px-4 py-2 text-left hidden sm:table-cell">Reg No</th>
+            <th class="px-4 py-2 text-center">Attendance</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceTable" class="bg-white dark:bg-gray-800"></tbody>
+      </table>
+    </div>
+    <div class="mt-4">
+      <button onclick="submitAttendance()" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">Save Attendance</button>
+    </div>
+  </section>
+</main>
+
+<script>
+// Navbar functions
+function showSection(id) {
+  document.querySelectorAll("main section").forEach(sec=>sec.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  if(id==='attendance') loadStudents();
+}
+function toggleSidebar(){ document.getElementById("sidebar").classList.toggle("-translate-x-full"); document.getElementById("overlay").classList.toggle("hidden"); }
+function navigate(section){ showSection(section); toggleSidebar(); }
+function toggleDarkMode(){ document.body.classList.toggle("dark"); }
+
+// Load advisor info
+function loadAdvisorInfo(){
+  const name = localStorage.getItem("advisorName");
+  const dept = localStorage.getItem("advisorDepartment");
+  const year = localStorage.getItem("advisorYear");
+  const className = localStorage.getItem("advisorClass");
+  const subjects = JSON.parse(localStorage.getItem("advisorSubjects")) || [];
+
+  document.getElementById("advisorName").textContent=name;
+  document.getElementById("advisorDept").textContent=dept;
+  document.getElementById("advisorClass").textContent=`${className} / Year ${year}`;
+
+  const list=document.getElementById("subjectList");
+  list.innerHTML="";
+  subjects.forEach(s=>{
+    const li=document.createElement("li");
+    li.textContent=s;
+    list.appendChild(li);
+  });
+}
+
+// Load students from backend
+async function loadStudents(){
+  try {
+    const advisorUserid = localStorage.getItem("advisorUserid");
+    const response = await fetch(`http://localhost:5000/api/advisor/${advisorUserid}/students`);
+    if(!response.ok) throw new Error("Failed to fetch students");
+    const data = await response.json();
+    const students = data.students;
+
+    // Student List table
+    const tbody = document.getElementById("studentTable");
+    tbody.innerHTML="";
+    students.forEach((s,i)=>{
+      const row = `<tr class="border-t border-gray-200 dark:border-gray-700">
+        <td class="px-4 py-2 hidden sm:table-cell">${i+1}</td>
+        <td class="px-4 py-2">${s.name}</td>
+        <td class="px-4 py-2 hidden sm:table-cell">${s.regno}</td>
+      </tr>`;
+      tbody.insertAdjacentHTML("beforeend", row);
+    });
+
+    // Attendance table
+    const attTable = document.getElementById("attendanceTable");
+    attTable.innerHTML="";
+        students.forEach((s,i)=>{
+      const row = `<tr class="border-t border-gray-200 dark:border-gray-700">
+        <td class="px-4 py-2 hidden sm:table-cell">${i+1}</td>
+        <td class="px-4 py-2">${s.name}</td>
+        <td class="px-4 py-2 hidden sm:table-cell">${s.regno}</td>
+        <td class="px-4 py-2 text-center">
+          <select class="attendance-select px-3 py-1 border rounded-lg dark:bg-gray-700 dark:text-white" onchange="updateSelectColor(this)">
+            <option value="Present">Present</option>
+            <option value="Approved">Approved</option>
+            <option value="Unapproved">Unapproved<option>  
+            <option value="OD">OD</option>
+          </select>
+        </td>
+      </tr>`;
+      attTable.insertAdjacentHTML("beforeend", row);
+    });
+
+    // Update colors
+    document.querySelectorAll(".attendance-select").forEach(updateSelectColor);
+
+  } catch (error) {
+    console.error("❌ Error loading students:", error);
+    alert("Failed to load students");
+  }
+}
+
+// Update color for dropdown
+function updateSelectColor(select){
+  select.classList.remove("text-green-600","text-red-600","text-blue-600");
+  if(select.value==="Present") select.classList.add("text-green-600");
+  else if(select.value==="Absent") select.classList.add("text-red-600");
+  else if(select.value==="OD") select.classList.add("text-blue-600");
+}
+
+// Submit attendance to backend
+async function submitAttendance(){
+  const rows = document.querySelectorAll("#attendanceTable tr");
+  const attendanceData = [];
+  rows.forEach(r=>{
+    const regno = r.cells[2].innerText;
+    const status = r.querySelector("select").value;
+    attendanceData.push({ regno, status });
+  });
+
+  ppp
+  try {
+    const response = await fetch("http://localhost:5000/api/attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ advisorUserid: localStorage.getItem("advisorUserid"), attendance: attendanceData })
+    });
+    const data = await response.json();
+    if(response.ok){
+      alert("✅ Attendance saved successfully!");
+    } else {
+      alert("❌ Error: " + (data.message || "Failed to save attendance"));
+    }
+  } catch (err) {
+    console.error("❌ Error submitting attendance:", err);
+    alert("Something went wrong!");
+  }
+}
+
+// On page load
+document.addEventListener("DOMContentLoaded", ()=>{
+  const advisorUserid = localStorage.getItem("advisorUserid");
+  if(!advisorUserid) window.location.href="advisor_login.html";
+  else {
+    loadAdvisorInfo();
+    showSection('advisorInfo'); // Show My Info by default
+    loadStudents(); // Load student list and attendance automatically
+  }
+  
+});
+</script>
+</body>
+</html>
+

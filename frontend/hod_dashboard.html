@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HOD Attendance Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.card{background:white;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 4px 8px rgba(0,0,0,.1)}
+pre{white-space:pre-wrap;font-family:inherit}
+</style>
+</head>
+
+<body class="bg-gray-100 p-4">
+
+<h1 class="text-xl font-bold mb-4">🎓 HOD Attendance Dashboard</h1>
+
+<select id="classSelect" onchange="loadData()" class="mb-4 px-3 py-2 border rounded">
+  <option value="III  IT">III IT</option>
+  <option value="II  IT">II IT</option>
+  <option value="II  AIDS">II AIDS</option>
+</select>
+
+<div class="card">
+  <pre id="hodReport">Loading..</pre>
+</div>
+
+<div class="card">
+  <div id="details"></div>
+</div>
+
+<button onclick="copyReport()" class="px-4 py-2 bg-blue-600 text-white rounded">📋 Copy</button>
+<button onclick="shareReport()" class="px-4 py-2 bg-green-600 text-white rounded ml-2">📲 WhatsApp</button>
+
+<script>
+async function loadData(){
+  const cls = document.getElementById("classSelect").value;
+
+  try{
+    const res = await fetch(
+      "http://localhost:5000/api/attendance/hod/class-summary/" + cls
+    );
+
+    if(!res.ok) throw new Error("API not OK");
+
+    const data = await res.json();
+    console.log("FETCHED DATA 👉", data); // 🔴 VERY IMPORTANT
+
+    // SAFE READ
+    const summary = data.summary || {};
+    const dateStr = data.date
+      ? new Date(data.date).toLocaleDateString("en-GB")
+      : new Date().toLocaleDateString("en-GB");
+
+    const dept = data.department || (cls.includes("AIDS") ? "AIDS" : "IT");
+    const yearTxt = data.year === 3 ? "III Year" : "II Year";
+
+    const report =
+`☀ Date: ${dateStr}
+
+➕ ${yearTxt}: ${dept}  ${summary.present || 0}/${summary.total || 0}
+📍 Approved: ${summary.approved ?? "Nil"}
+📍 Unapproved: ${summary.unapproved ?? "Nil"}
+📍 OD: ${summary.od ?? "Nil"}
+
+Submitted by:
+S Kumaravel
+HoD / IT & AIDS`;
+
+    document.getElementById("hodReport").textContent = report;
+
+    document.getElementById("details").innerHTML = `
+<b>Total:</b> ${summary.total || 0}<br>
+<b>Present:</b> ${summary.present || 0}<br>
+<b>Absent:</b> ${summary.absent || 0}<br>
+<b>Approved:</b> ${summary.approved || 0}<br>
+<b>Unapproved:</b> ${summary.unapproved || 0}<br>
+<b>OD:</b> ${summary.od || 0}
+`;
+
+  }catch(err){
+    console.error("FETCH ERROR ❌", err);
+    document.getElementById("hodReport").textContent =
+      "❌ Backend data varala. Console open panni paathuko.";
+  }
+}
+
+function copyReport(){
+  navigator.clipboard.writeText(
+    document.getElementById("hodReport").textContent
+  );
+  alert("Copied");
+}
+
+function shareReport(){
+  const text = document.getElementById("hodReport").textContent;
+  window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+}
+
+loadData();
+</script>
+
+</body>
+</html>

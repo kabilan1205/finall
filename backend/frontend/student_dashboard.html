@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PRESENZO • Student Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+  <style>.hidden { display: none; }</style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 dark:text-slate-100 min-h-screen">
+
+  <!-- Header / Navbar -->
+  <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-indigo-700 dark:to-fuchsia-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <h1 class="text-base sm:text-lg md:text-xl font-bold">🎓 Student Portal</h1>
+      <nav class="hidden md:flex items-center gap-6">
+        <button onclick="showSection('leaveForm')" class="hover:underline">Leave Requests</button>
+        <button onclick="showSection('attendance')" class="hover:underline">Attendance</button>
+        <button onclick="showSection('profile')" class="hover:underline">Profile</button>
+        <button onclick="showSection('viewRequests')" class="hover:underline">View Requests</button>
+        <button id="themeBtn" class="ml-3 rounded-xl bg-white/90 text-black px-3 py-1 shadow hover:bg-white dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">🌙</button>
+      </nav>
+      <div class="md:hidden flex items-center gap-2">
+        <button id="themeBtnSm" class="rounded-xl bg-white/90 text-black px-3 py-1 shadow hover:bg-white dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700" aria-label="Toggle theme">🌙</button>
+        <button id="menuBtn" class="rounded-xl bg-white/90 text-black px-3 py-1 shadow hover:bg-white dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 hidden z-40" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-slate-800 shadow-lg transform -translate-x-full transition-transform z-50">
+    <div class="p-4 flex justify-between items-center border-b dark:border-slate-700">
+      <h2 class="font-bold text-lg">Menu</h2>
+      <button onclick="closeSidebar()" class="text-xl">✖</button>
+    </div>
+    <nav class="p-4 space-y-3">
+      <button class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" onclick="closeSidebar();showSection('leaveForm')">Leave Requests</button>
+      <button class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" onclick="closeSidebar();showSection('attendance')">Attendance</button>
+      <button class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" onclick="closeSidebar();showSection('profile')">Profile</button>
+      <button class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" onclick="closeSidebar();showSection('viewRequests')">View Requests</button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 md:py-10 space-y-6">
+
+    <!-- Leave Request Form -->
+    <section id="leaveForm" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 hidden">
+      <h2 class="text-xl font-bold mb-4">📌 Leave Request Form</h2>
+      <form class="space-y-4">
+        <input type="text" id="leaveName" placeholder="Your Name" class="w-full p-2 border rounded-lg dark:border-slate-700 dark:bg-slate-900" required>
+        <input type="text" placeholder="Reason" class="w-full p-2 border rounded-lg dark:border-slate-700 dark:bg-slate-900" required>
+        <input type="date" id="leaveDate" class="w-full p-2 border rounded-lg dark:border-slate-700 dark:bg-slate-900" required>
+        <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow">Submit</button>
+      </form>
+    </section>
+
+    <!-- Attendance -->
+    <section id="attendance" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 hidden">
+      <h2 class="text-xl font-bold mb-4">📊 Attendance</h2>
+      <p>Your Attendance: <span id="studentAttendance" class="font-bold text-blue-600 dark:text-blue-400">--%</span></p>
+    </section>
+
+    <!-- Profile -->
+    <section id="profile" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 hidden">
+      <h2 class="text-xl font-bold mb-4">👤 Profile</h2>
+      <p><strong>Name:</strong> <span id="studentName">--</span></p>
+      <p><strong>Roll No:</strong> <span id="studentRoll">--</span></p>
+      <p><strong>Department:</strong> <span id="studentDept">--</span></p>
+      <p><strong>Email:</strong> <span id="studentEmail">--</span></p>
+    </section>
+
+    <!-- View Requests -->
+    <section id="viewRequests" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 hidden">
+      <h2 class="text-xl font-bold mb-4">📝 Student Leave Requests</h2>
+      <div class="border p-4 rounded-lg">
+        <div>
+          <p><strong>Student:</strong> <span id="reqStudent">--</span></p>
+          <p><strong>Reason:</strong> Medical Leave</p>
+          <p><strong>Dates:</strong> 12-09-2025 to 14-09-2025</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Default Home -->
+    <section id="home" class="bg-white dark:bg-slate-800 rounded-2xl shadow p-6">
+      <h2 class="text-xl font-bold mb-2">
+        Welcome 👋 <span id="welcomeName" class="text-blue-600 dark:text-blue-400"></span>
+      </h2>
+      <p class="text-gray-600 dark:text-slate-300">Use the top navigation (or mobile menu) to access features.</p>
+    </section>
+
+  </main>
+
+  <!-- Scripts -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Restore dark mode
+      if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark");
+        document.querySelectorAll("#themeBtn,#themeBtnSm").forEach(btn => btn.textContent = "☀");
+      }
+
+      // 🔹 Get student details from localStorage
+      const studentName = localStorage.getItem("studentName") || "Unknown";
+      const studentRegNo = localStorage.getItem("studentRegNo") || "--";
+      const studentDept = localStorage.getItem("studentDept") || "Not set";
+      const studentEmail = localStorage.getItem("studentEmail") || "--";
+      const studentAttendance = localStorage.getItem("studentAttendance") || "87%";
+
+      // Fill Profile section
+      document.getElementById("studentName").textContent = studentName;
+      document.getElementById("studentRoll").textContent = studentRegNo;
+      document.getElementById("studentDept").textContent = studentDept;
+      document.getElementById("studentEmail").textContent = studentEmail;
+
+      // Welcome text
+      document.getElementById("welcomeName").textContent = studentName;
+
+      // Attendance
+      document.getElementById("studentAttendance").textContent = studentAttendance;
+
+      // Fill leave form name
+      const leaveName = document.getElementById("leaveName");
+      if (leaveName) leaveName.value = studentName;
+
+      // Example request section
+      document.getElementById("reqStudent").textContent = studentName;
+
+      // Set default date in leave form
+      const dateInput = document.getElementById("leaveDate");
+      if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+      }
+    });
+
+    // Show section
+    function showSection(id){
+      document.querySelectorAll('main > section').forEach(x=>x.classList.add('hidden'));
+      document.getElementById(id)?.classList.remove('hidden');
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+
+    // Sidebar control
+    function openSidebar(){
+      document.getElementById("sidebar").classList.remove("-translate-x-full");
+      document.getElementById("sidebarOverlay").classList.remove("hidden");
+    }
+    function closeSidebar(){
+      document.getElementById("sidebar").classList.add("-translate-x-full");
+      document.getElementById("sidebarOverlay").classList.add("hidden");
+    }
+    document.getElementById("menuBtn").addEventListener("click", openSidebar);
+
+    // Dark mode toggle
+    function toggleTheme(){
+      const root=document.documentElement;
+      const isDark=root.classList.toggle("dark");
+      localStorage.setItem("theme",isDark?"dark":"light");
+      document.querySelectorAll("#themeBtn,#themeBtnSm").forEach(btn=>{
+        btn.textContent=isDark?"☀":"🌙";
+      });
+    }
+    document.getElementById("themeBtn")?.addEventListener("click",toggleTheme);
+    document.getElementById("themeBtnSm")?.addEventListener("click",toggleTheme);
+  </script>
+</body>
+</html>

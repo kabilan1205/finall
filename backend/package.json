@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js && open canva.html",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "csv-stringify": "^6.6.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.2.1",
+    "express-session": "^1.18.2",
+    "mongod": "^2.0.0",
+    "mongoose": "^8.17.1",
+    "multer": "^2.0.2",
+    "pdfkit": "^0.17.1",
+    "v": "^0.3.0"
+  }
+}
